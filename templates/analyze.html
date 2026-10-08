@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}Analyze Transaction | UPI Fraud Detection{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <div class="page-title">
+        <h1>TRANSACTION RISK ANALYSIS</h1>
+        <p>Input real-time UPI transaction telemetry to evaluate fraud probability</p>
+    </div>
+    <div class="top-bar-actions">
+        <div class="status-pill-online">
+            <span class="dot-pulse"></span>
+            <span>MODEL: RANDOM FOREST</span>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- QUICK PRESENTATION TEST PRESETS                              -->
+<!-- ============================================================ -->
+<div class="glass-card" style="padding:16px 20px; margin-bottom:24px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <span style="font-size:0.75rem; font-weight:700; color:var(--accent-cyan); letter-spacing:0.06em;">QUICK TEST SCENARIOS</span>
+        <span style="font-size:0.75rem; color:var(--text-muted);">One-click test scenarios</span>
+    </div>
+    <div class="quick-preset-chips">
+        <button type="button" class="preset-chip-btn" 
+            data-amount="500" data-time="14" data-type="Food" data-upi="canteen@upi" data-mode="QR Code Scan">
+            🟢 Normal: Food ₹500 (Daytime 2 PM)
+        </button>
+
+        <button type="button" class="preset-chip-btn" 
+            data-amount="15000" data-time="20" data-type="Shopping" data-upi="store@hdfc" data-mode="UPI ID / VPA">
+            🟡 Evening: Shopping ₹15,000 (8 PM)
+        </button>
+
+        <button type="button" class="preset-chip-btn" 
+            data-amount="250000" data-time="2" data-type="Money Transfer" data-upi="medical@axis" data-mode="UPI ID / VPA" data-reason="Emergency Hospital Surgery Deposit">
+            ⚠️ Midnight Alert: ₹2,50,000 (2 AM)
+        </button>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 2-COLUMN ANALYSIS WORKSPACE                                  -->
+<!-- ============================================================ -->
+<div class="content-grid-2col">
+    
+    <!-- LEFT COLUMN: TRANSACTION INPUT FORM -->
+    <div class="glass-card" style="padding:28px;">
+        <h2 class="form-section-title">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            <span>Transaction Telemetry</span>
+        </h2>
+
+        <form id="transaction-form" novalidate>
+            <!-- Transaction Amount -->
+            <div class="form-group">
+                <label class="form-label" for="amount">
+                    <span>Transaction Amount</span>
+                    <span style="color:var(--accent-cyan); font-weight:bold;">₹ INR</span>
+                </label>
+                <input type="number" id="amount" class="form-control" placeholder="e.g. 5000" min="1" step="any" required>
+            </div>
+
+            <!-- Time Input (Number + Slider) -->
+            <div class="form-group">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <label class="form-label" for="time-input" style="margin:0;">Transaction Time (Hour 0–23)</label>
+                    <span id="time-badge" style="font-size:0.72rem; font-weight:700; color:var(--text-muted); background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:999px;">--:--</span>
+                </div>
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <input type="number" id="time-input" class="form-control" min="0" max="23" placeholder="0–23" style="width:90px; text-align:center;">
+                    <input type="range" id="time-slider" min="0" max="23" value="0" class="range-slider" style="flex-grow:1;">
+                </div>
+            </div>
+
+            <!-- Transaction Type & Payment Method -->
+            <div class="form-row-dual">
+                <div class="form-group">
+                    <label class="form-label" for="transaction_type">Category / Purpose</label>
+                    <select id="transaction_type" class="form-select">
+                        <option value="" disabled selected>Select Category</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat }}">{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="payment_mode">Payment Method</label>
+                    <select id="payment_mode" class="form-select">
+                        <option value="UPI ID / VPA">UPI ID / VPA</option>
+                        <option value="QR Code Scan">QR Code Scan</option>
+                        <option value="Phone Number Transfer">Phone Number Transfer</option>
+                        <option value="NetBanking / AutoPay">NetBanking / AutoPay</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Beneficiary UPI ID & Recipient Name -->
+            <div class="form-row-dual">
+                <div class="form-group">
+                    <label class="form-label" for="upi_id">Beneficiary UPI ID / VPA</label>
+                    <input type="text" id="upi_id" class="form-control" placeholder="e.g. merchant@upi or 9876543210@paytm">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="recipient_name">Recipient Name / Note</label>
+                    <input type="text" id="recipient_name" class="form-control" placeholder="e.g. Apollo Pharmacy / Rahul Sharma">
+                </div>
+            </div>
+
+            <!-- High-Value Midnight Transaction Alert Box & Reason (12 AM - 6 AM & Amount > ₹200,000) -->
+            <div id="midnight-alert-box" class="midnight-alert-card hidden" style="background:rgba(239, 68, 68, 0.12); border:1px solid rgba(239, 68, 68, 0.45); border-radius:var(--radius-md); padding:16px; margin-bottom:18px; box-shadow:0 0 20px rgba(239, 68, 68, 0.15);">
+                <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:12px;">
+                    <span style="font-size:1.6rem; line-height:1;">⚠️</span>
+                    <div>
+                        <strong style="color:#ef4444; font-size:0.95rem; display:block; margin-bottom:4px;">
+                            High-Value Midnight Transaction Alert
+                        </strong>
+                        <p style="font-size:0.82rem; color:var(--text-secondary); margin:0;">
+                            Transactions exceeding <strong>₹2,00,000</strong> initiated between <strong>12:00 AM and 06:00 AM</strong> trigger automated security scrutiny. A mandatory justification reason is required to process this transaction.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label" for="high_tx_reason" style="color:#fca5a5; display:flex; justify-content:space-between;">
+                        <span>Reason for High Transaction</span>
+                        <span style="color:#ef4444; font-weight:700;">* Required</span>
+                    </label>
+                    <textarea id="high_tx_reason" class="form-control" rows="2" placeholder="e.g. Emergency medical expense / Urgent property deposit / Business vendor settlement" style="border-color:rgba(239,68,68,0.4); resize:none;"></textarea>
+                    <small id="high-tx-reason-error" style="color:#ef4444; font-size:0.75rem; display:none; margin-top:4px;">Please provide a reason for this high-value midnight transaction.</small>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="analyze-submit-btn" class="btn-analyze-submit">
+                <span id="btn-text">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    Analyze Transaction
+                </span>
+                <span id="btn-loader" class="hidden" style="display:flex; align-items:center; gap:8px;">
+                    <span class="spinner-border"></span>
+                    <span>Analyzing Transaction...</span>
+                </span>
+            </button>
+        </form>
+    </div>
+
+    <!-- RIGHT COLUMN: RESULTS & EXPLAINABILITY -->
+    <div>
+        <!-- Empty State Placeholder -->
+        <div id="empty-analysis-state" class="glass-card" style="padding:48px 24px; text-align:center; min-height:450px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+            <div style="width:64px; height:64px; border-radius:50%; background:rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center; margin-bottom:16px; color:var(--text-muted);">
+                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <h3 style="font-size:1.2rem; margin-bottom:6px;">Ready for Evaluation</h3>
+            <p style="font-size:0.86rem; color:var(--text-muted); max-width:360px;">
+                Fill the transaction parameters or select one of the quick scenario presets above to execute the Random Forest evaluation.
+            </p>
+        </div>
+
+        <!-- Dynamic Results Card (Initially Hidden) -->
+        <div id="analysis-result-card" class="glass-card result-card-container hidden" style="padding:24px;">
+            <!-- Alert Banner -->
+            <div id="status-alert-banner" class="alert-banner safe">
+                <div style="font-size:1.3rem;">🛡️</div>
+                <div>
+                    <strong id="alert-title" style="display:block; font-size:0.92rem;">✓ TRANSACTION SAFE</strong>
+                    <span id="alert-desc" style="font-size:0.78rem;">Parameters conform to standard consumer patterns. Safe to authorize.</span>
+                </div>
+            </div>
+
+            <!-- Risk Gauge & Score Metrics -->
+            <div class="gauge-display-box">
+                <div class="gauge-svg-wrapper">
+                    <svg viewBox="0 0 160 160" style="width:100%; height:100%;">
+                        <circle class="gauge-circle-track" cx="80" cy="80" r="68"></circle>
+                        <circle id="gauge-circle" class="gauge-circle-val" cx="80" cy="80" r="68"></circle>
+                    </svg>
+                    <div class="gauge-text-overlay">
+                        <span class="gauge-sub-lbl">PROBABILITY</span>
+                        <div id="prob-number" class="gauge-percentage-number">0%</div>
+                    </div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <span style="font-size:0.74rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">MODEL PREDICTION</span>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span id="status-pill" class="status-pill safe">SAFE</span>
+                        <span id="risk-level-badge" class="status-pill safe">LOW RISK</span>
+                    </div>
+                    <div style="margin-top:6px;">
+                        <span style="font-size:0.78rem; color:var(--text-muted);">Risk Score:</span>
+                        <strong id="risk-score-val" style="font-size:1.1rem; color:#ffffff; margin-left:6px;">0 / 100</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction Summary -->
+            <div style="background:rgba(11, 19, 36, 0.6); border:1px solid var(--border-glass); border-radius:var(--radius-md); padding:14px 18px;">
+                <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:8px;">Transaction Summary</span>
+                <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; font-size:0.82rem;">
+                    <div><span style="color:var(--text-muted); display:block; font-size:0.7rem;">Amount</span><strong id="sum-amount">₹0.00</strong></div>
+                    <div><span style="color:var(--text-muted); display:block; font-size:0.7rem;">Time</span><strong id="sum-time">--:--</strong></div>
+                    <div><span style="color:var(--text-muted); display:block; font-size:0.7rem;">Category</span><strong id="sum-type">--</strong></div>
+                    <div><span style="color:var(--text-muted); display:block; font-size:0.7rem;">Method</span><strong id="sum-mode">UPI ID / VPA</strong></div>
+                </div>
+                <div id="sum-reason-box" class="hidden" style="margin-top:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.08);">
+                    <span style="color:var(--text-muted); display:block; font-size:0.7rem;">Declared Reason</span>
+                    <strong id="sum-reason" style="color:#fde68a; font-size:0.82rem; font-weight:500;">--</strong>
+                </div>
+            </div>
+
+            <!-- Explainable Risk Indicators -->
+            <div style="background:rgba(11, 19, 36, 0.6); border:1px solid var(--border-glass); border-radius:var(--radius-md); padding:16px 18px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <strong style="font-size:0.88rem; color:#ffffff;">WHY WAS THIS TRANSACTION FLAGGED?</strong>
+                    <span style="font-size:0.7rem; color:var(--accent-cyan); font-weight:600;">Risk Indicators</span>
+                </div>
+                <ul id="indicators-list" style="list-style:none; padding:0; margin:0; font-size:0.82rem;">
+                    <!-- Dynamically populated -->
+                </ul>
+            </div>
+
+            <!-- Verification Action Box (for High/Critical risk) -->
+            <div id="verification-action-box" class="hidden" style="background:rgba(239, 68, 68, 0.08); border:1px solid var(--risk-danger-border); border-radius:var(--radius-md); padding:16px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <strong style="display:block; font-size:0.88rem; color:#fca5a5;">High-Risk Verification Required</strong>
+                    <span style="font-size:0.75rem; color:var(--text-muted);">Simulate user authorization response:</span>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" id="btn-verify-tx" class="nav-btn nav-btn-primary" style="padding:6px 14px; font-size:0.8rem; background:var(--risk-safe); box-shadow:none;">
+                        ✓ Verify
+                    </button>
+                    <button type="button" id="btn-cancel-tx" class="nav-btn nav-btn-secondary" style="padding:6px 14px; font-size:0.8rem; border-color:var(--risk-danger); color:var(--risk-danger);">
+                        ✕ Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/analyze.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,363 @@
+/* ==========================================================================
+   UPI Fraud Detection System – Fully Responsive Breakpoints (responsive.css)
+   Breakpoints:
+     xs  : < 480px     (small phones)
+     sm  : 480–767px   (large phones)
+     md  : 768–1023px  (tablets)
+     lg  : 1024–1279px (small laptops)
+     xl  : >= 1280px   (desktop / large screens)
+   ========================================================================== */
+
+/* ──────────────────────────────────────────────────────────────────────────
+   BASE FLUID TYPOGRAPHY  (clamp scales text across all viewports)
+   ────────────────────────────────────────────────────────────────────────── */
+:root {
+    --fs-hero:  clamp(1.85rem, 5vw,   3.4rem);
+    --fs-h1:    clamp(1.35rem, 3.5vw, 1.85rem);
+    --fs-h2:    clamp(1.2rem,  2.8vw, 1.5rem);
+    --fs-h3:    clamp(1rem,    2vw,   1.25rem);
+    --fs-body:  clamp(0.875rem,1.5vw, 1rem);
+    --fs-small: clamp(0.75rem, 1.2vw, 0.875rem);
+    --fs-xs:    clamp(0.68rem, 1vw,   0.78rem);
+}
+
+body {
+    font-size: var(--fs-body);
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+.hero-title                { font-size: var(--fs-hero); }
+.page-title h1             { font-size: var(--fs-h1); }
+.section-main-title        { font-size: var(--fs-h2); }
+h3, .card-title            { font-size: var(--fs-h3); }
+p, li, td, th,
+label, .form-label         { font-size: var(--fs-body); }
+.stats-label, .mini-label  { font-size: var(--fs-xs); }
+.stats-value               { font-size: clamp(1.6rem, 3.5vw, 2.1rem); }
+.brand-title-text          { font-size: clamp(1.15rem, 2.5vw, 1.45rem); }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   LARGE DESKTOP >= 1280px — generous spacing
+   ────────────────────────────────────────────────────────────────────────── */
+@media (min-width: 1280px) {
+    .app-main {
+        padding: 36px 48px 80px;
+    }
+    .stats-cards-grid       { grid-template-columns: repeat(4, 1fr); }
+    .content-grid-2col      { grid-template-columns: 1fr 1fr; }
+    .content-grid-3col      { grid-template-columns: repeat(3, 1fr); }
+    .features-cards-grid    { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   SMALL LAPTOP  1024px – 1279px
+   ────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 1279px) {
+    .app-sidebar  { width: 220px; }
+    .app-main     { margin-left: 220px; padding: 28px 28px 60px; }
+
+    .stats-cards-grid    { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .features-cards-grid { grid-template-columns: repeat(2, 1fr); }
+    .steps-container     { grid-template-columns: repeat(2, 1fr); }
+    .toggle-switch-group { grid-template-columns: 1fr 1fr; }
+    .form-row-dual       { grid-template-columns: 1fr 1fr; }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   TABLET  768px – 1023px
+   ────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 1023px) {
+    /* Sidebar slides off-canvas */
+    .app-sidebar {
+        width: 260px;
+        transform: translateX(-100%);
+        z-index: 200;
+    }
+    .app-sidebar.open {
+        transform: translateX(0);
+        box-shadow: 0 0 60px rgba(0, 0, 0, 0.85);
+    }
+
+    .app-main { margin-left: 0; padding: 0 20px 90px; }
+
+    /* Sticky mobile top bar */
+    .mobile-header-bar {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 0 14px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--border-glass);
+        position: sticky;
+        top: 0;
+        background: rgba(6, 9, 19, 0.92);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        z-index: 50;
+    }
+
+    .mobile-menu-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-sm);
+        color: #ffffff;
+        padding: 9px 13px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition-smooth);
+    }
+    .mobile-menu-btn:hover { background: rgba(255, 255, 255, 0.16); }
+
+    /* Grid collapses */
+    .stats-cards-grid                      { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .content-grid-2col,
+    .content-grid-3col,
+    .extra-features-grid                   { grid-template-columns: 1fr; gap: 18px; }
+    .features-cards-grid                   { grid-template-columns: 1fr 1fr; gap: 16px; }
+    .steps-container                       { grid-template-columns: repeat(2, 1fr); }
+    .toggle-switch-group                   { grid-template-columns: 1fr 1fr; }
+    .form-row-dual                         { grid-template-columns: 1fr; }
+    .dashboard-grid                        { grid-template-columns: 1fr; }
+    .summary-grid                          { grid-template-columns: repeat(2, 1fr); }
+
+    /* Top bar */
+    .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    .top-bar-actions { width: 100%; justify-content: flex-start; flex-wrap: wrap; }
+
+    /* Hero */
+    .hero-section    { margin: 20px auto 50px; }
+    .hero-cta-group  { flex-direction: column; align-items: center; }
+
+    /* Auth */
+    .auth-card       { padding: 28px 22px; }
+
+    /* Page level elements */
+    .app-header  { flex-direction: column; align-items: flex-start; gap: 14px; }
+    .app-footer  { flex-direction: column; align-items: flex-start; gap: 14px; }
+    .system-status-block { text-align: left; }
+    .status-row  { justify-content: flex-start; }
+
+    /* Gauge & risk */
+    .gauge-display-box      { flex-direction: column; align-items: center; text-align: center; }
+    .risk-overview-container { grid-template-columns: 1fr; text-align: center; gap: 16px; }
+
+    /* Filter & table */
+    .filter-bar { flex-direction: column; align-items: stretch; }
+    .filter-bar select, .filter-bar input, .filter-bar button { width: 100%; }
+    .data-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .data-table         { min-width: 640px; }
+
+    /* Pagination */
+    .pagination-controls { flex-direction: column; align-items: flex-start; gap: 10px; }
+
+    /* Bottom navigation */
+    .mobile-bottom-nav {
+        display: flex !important;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: rgba(11, 17, 33, 0.96);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid var(--border-glass);
+        padding: 8px 16px env(safe-area-inset-bottom, 0px);
+        justify-content: space-around;
+        z-index: 1000;
+    }
+    .mobile-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        text-decoration: none;
+        padding: 4px 12px;
+        border-radius: var(--radius-sm);
+        transition: var(--transition-smooth);
+    }
+    .mobile-nav-item.active { color: var(--primary-light); }
+    .mobile-nav-item:hover  { color: #ffffff; }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   LARGE PHONES  480px – 767px
+   ────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+    .app-main           { padding: 0 14px 90px; }
+    .mobile-header-bar  { padding: 13px 0; }
+
+    .stats-cards-grid   { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stats-value        { font-size: clamp(1.4rem, 6vw, 1.9rem); }
+    .features-cards-grid { grid-template-columns: 1fr; }
+    .steps-container    { grid-template-columns: 1fr; }
+    .toggle-switch-group { grid-template-columns: 1fr; }
+    .preset-buttons-grid { grid-template-columns: 1fr; }
+
+    .hero-title       { font-size: clamp(1.7rem, 8vw, 2.5rem); }
+    .hero-description { font-size: clamp(0.9rem, 3.5vw, 1rem); }
+
+    /* Public nav — keep only CTA */
+    .public-nav     { padding: 14px 16px; }
+    .nav-links      { gap: 10px; }
+    .nav-link-item  { display: none; }
+
+    /* Auth */
+    .auth-page-container { padding: 20px 14px; }
+    .auth-card           { padding: 24px 18px; max-width: 100%; }
+    .auth-header h2      { font-size: clamp(1.4rem, 6vw, 1.8rem); }
+
+    /* Section title */
+    .section-main-title { font-size: clamp(1.2rem, 5vw, 1.6rem); }
+
+    /* Time input */
+    .time-input-dual { flex-direction: column; }
+    .time-number-box { width: 100%; }
+
+    /* Cards & charts */
+    .glass-card  { padding: 18px 16px; }
+    .chart-box   { padding: 16px; min-height: 240px; }
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+
+    /* CTA buttons */
+    .top-bar-actions .nav-btn { flex: 1; justify-content: center; }
+
+    /* Toast above bottom nav */
+    .toast { bottom: 80px; right: 12px; left: 12px; font-size: 0.82rem; }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   SMALL PHONES  < 480px
+   ────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 479px) {
+    .app-main { padding: 0 10px 90px; }
+
+    /* Single-column stats */
+    .stats-cards-grid { grid-template-columns: 1fr; gap: 10px; }
+    .stats-card       { padding: 16px 14px; }
+    .stats-value      { font-size: 1.8rem; }
+
+    /* Hero */
+    .hero-title       { font-size: clamp(1.5rem, 9vw, 2rem); letter-spacing: -0.01em; }
+    .hero-description { font-size: 0.88rem; }
+    .cta-btn-large    { width: 100%; justify-content: center; padding: 13px 20px; }
+    .nav-btn          { padding: 8px 14px; font-size: 0.82rem; }
+
+    /* Auth */
+    .auth-card        { padding: 20px 14px; }
+
+    /* Summary & table */
+    .summary-grid     { grid-template-columns: 1fr; }
+    .data-table       { min-width: 480px; font-size: 0.78rem; }
+    .data-table th,
+    .data-table td    { padding: 10px; }
+
+    /* Gauge */
+    .gauge-svg-wrapper,
+    .risk-meter-wrapper       { width: 110px; height: 110px; }
+    .gauge-percentage,
+    .gauge-percentage-number  { font-size: 1.6rem; }
+
+    /* Cards & typography */
+    .glass-card        { padding: 16px 12px; }
+    body               { font-size: 0.92rem; line-height: 1.65; }
+    p, li, td, th,
+    label, .form-label { font-size: 0.88rem; }
+    .page-title h1     { font-size: 1.3rem; }
+    h3                 { font-size: 1rem; }
+    h4                 { font-size: 0.92rem; }
+
+    /* Status pills */
+    .status-pill { font-size: 0.72rem; padding: 3px 8px; }
+
+    /* Input touch targets */
+    .form-control,
+    .form-select,
+    .form-input,
+    .auth-form input { padding: 13px 14px; font-size: 1rem; }
+
+    /* Button minimum touch targets (WCAG AA) */
+    .nav-btn,
+    .btn-analyze-submit,
+    .auth-submit-btn,
+    .primary-submit-btn { min-height: 44px; }
+
+    /* Toast */
+    .toast { left: 10px; right: 10px; bottom: 80px; }
+
+    /* Mobile nav labels */
+    .mobile-nav-item { font-size: 0.62rem; padding: 3px 6px; }
+
+    /* Sidebar brand */
+    .sidebar-brand     { padding: 18px 16px; }
+    .brand-title-text  { font-size: 1.2rem; }
+
+    /* Preset chips */
+    .quick-preset-chips { gap: 6px; }
+    .preset-chip-btn    { font-size: 0.74rem; padding: 5px 10px; }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   DESKTOP ONLY — hide mobile-only elements
+   ────────────────────────────────────────────────────────────────────────── */
+@media (min-width: 1024px) {
+    .mobile-header-bar { display: none !important; }
+    .mobile-bottom-nav { display: none !important; }
+
+    .app-sidebar { transform: translateX(0) !important; width: 260px; }
+    .app-main    { margin-left: 260px; padding: 30px 36px 60px; }
+
+    .top-bar { flex-direction: row; align-items: center; }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   LANDSCAPE PHONES (height < 480px)
+   ────────────────────────────────────────────────────────────────────────── */
+@media (max-height: 480px) and (orientation: landscape) {
+    .app-main          { padding-bottom: 70px; }
+    .hero-section      { margin: 10px auto 30px; }
+    .hero-title        { font-size: 1.7rem; }
+    .empty-state-card  { min-height: 260px; }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   TOUCH DEVICES — bigger tap targets
+   ────────────────────────────────────────────────────────────────────────── */
+@media (pointer: coarse) {
+    .menu-item a      { padding: 13px 16px; }
+    .preset-chip-btn  { padding: 8px 16px; }
+    .pagination-btn   { padding: 9px 18px; min-height: 40px; }
+    .toggle-card      { padding: 14px 16px; }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   PRINT
+   ────────────────────────────────────────────────────────────────────────── */
+@media print {
+    .app-sidebar, .mobile-bottom-nav, .mobile-header-bar,
+    .top-bar-actions, .btn-analyze-submit, .primary-submit-btn,
+    .nav-btn, .bg-ambient-layer { display: none !important; }
+
+    .app-main { margin-left: 0 !important; padding: 10px !important; }
+    body       { background: #ffffff; color: #1a1a1a; }
+
+    .glass-card {
+        border: 1px solid #cccccc;
+        box-shadow: none;
+        background: #f9f9f9;
+    }
+
+    .stats-value, .gauge-percentage,
+    h1, h2, h3, h4 {
+        color: #1a1a1a !important;
+        -webkit-text-fill-color: #1a1a1a !important;
+    }
+}

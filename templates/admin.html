@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Console | UPI Fraud Detection{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <div class="page-title">
+        <h1>ADMINISTRATOR CONTROL CENTER</h1>
+        <p>System-wide cybersecurity oversight, model management &amp; audit monitoring</p>
+    </div>
+    <div class="top-bar-actions">
+        <button type="button" id="btn-retrain-model" class="nav-btn nav-btn-primary" style="background:var(--accent-gradient);">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            <span>Retrain Model</span>
+        </button>
+    </div>
+</div>
+
+<!-- Retraining Status Alert Box -->
+<div id="retrain-status-msg" class="flash-alert info hidden" style="margin-bottom:20px;">
+    Model training in progress...
+</div>
+
+<!-- ============================================================ -->
+<!-- SYSTEM-WIDE TOP METRICS (From SQLite)                        -->
+<!-- ============================================================ -->
+<section class="stats-cards-grid">
+    <div class="glass-card stats-card card-theme-total">
+        <div class="stats-card-header">
+            <span class="stats-label">Registered Users</span>
+            <div class="stats-icon-badge">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+        </div>
+        <div class="stats-value">{{ stats.total_users }}</div>
+        <div class="stats-subtext">Active portal accounts</div>
+    </div>
+
+    <div class="glass-card stats-card card-theme-total">
+        <div class="stats-card-header">
+            <span class="stats-label">Total Transactions</span>
+            <div class="stats-icon-badge">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            </div>
+        </div>
+        <div class="stats-value">{{ stats.total_tx }}</div>
+        <div class="stats-subtext">System-wide evaluations</div>
+    </div>
+
+    <div class="glass-card stats-card card-theme-danger">
+        <div class="stats-card-header">
+            <span class="stats-label">Fraud Incidents</span>
+            <div class="stats-icon-badge">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+            </div>
+        </div>
+        <div class="stats-value" style="color:var(--risk-danger);">{{ stats.fraud_tx }}</div>
+        <div class="stats-subtext">{{ stats.fraud_rate }}% overall fraud rate</div>
+    </div>
+
+    <div class="glass-card stats-card card-theme-safe">
+        <div class="stats-card-header">
+            <span class="stats-label">Safe Cleared</span>
+            <div class="stats-icon-badge">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/></svg>
+            </div>
+        </div>
+        <div class="stats-value" style="color:var(--risk-safe);">{{ stats.safe_tx }}</div>
+        <div class="stats-subtext">Authorized clean transactions</div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- MODEL PIPELINE STATUS BANNER                                 -->
+<!-- ============================================================ -->
+<div class="glass-card" style="padding:20px 24px; margin-bottom:28px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+    <div>
+        <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Active Production Model</span>
+        <h3 style="font-size:1.2rem; color:#ffffff; margin-top:2px;">{{ stats.model_name }}</h3>
+    </div>
+    <div>
+        <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Last Calibration Timestamp</span>
+        <div style="font-size:0.92rem; color:var(--accent-cyan); font-weight:600; margin-top:2px;">{{ stats.trained_at }}</div>
+    </div>
+    <div>
+        <a href="{{ url_for('model_performance') }}" class="nav-btn nav-btn-secondary" style="font-size:0.82rem;">
+            View Detailed Benchmarks &rarr;
+        </a>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SYSTEM-WIDE TRANSACTION MONITORING TABLE                     -->
+<!-- ============================================================ -->
+<div class="glass-card" style="padding:24px;">
+    <div style="margin-bottom:18px;">
+        <h3 style="font-size:1.25rem;">Live Transaction Audit Stream</h3>
+        <p style="font-size:0.84rem; color:var(--text-muted);">Real-time monitoring across all system users and API endpoints</p>
+    </div>
+
+    <div class="data-table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Tx ID</th>
+                    <th>User</th>
+                    <th>Amount</th>
+                    <th>Category</th>
+                    <th>Risk Score</th>
+                    <th>Decision</th>
+                    <th>Resolution</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if recent_transactions %}
+                    {% for tx, pred, usr in recent_transactions %}
+                    <tr>
+                        <td><strong>#{{ tx.id }}</strong></td>
+                        <td>{{ usr.name if usr else 'Public API' }}</td>
+                        <td><strong>₹{{ "{:,.2f}".format(tx.amount) }}</strong></td>
+                        <td>{{ tx.transaction_type }}</td>
+                        <td>
+                            {% if pred.risk_level in ['HIGH', 'CRITICAL'] %}
+                                <span class="status-pill fraud">{{ pred.risk_score }} / 100</span>
+                            {% elif pred.risk_level == 'MEDIUM' %}
+                                <span class="status-pill suspicious">{{ pred.risk_score }} / 100</span>
+                            {% else %}
+                                <span class="status-pill safe">{{ pred.risk_score }} / 100</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if pred.status == 'FRAUD LIKELY' %}
+                                <span class="status-pill fraud">FRAUD LIKELY</span>
+                            {% elif pred.status == 'SUSPICIOUS' %}
+                                <span class="status-pill suspicious">SUSPICIOUS</span>
+                            {% else %}
+                                <span class="status-pill safe">SAFE</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span style="font-size:0.75rem; font-weight:600; color:var(--text-muted);">
+                                {{ pred.action_status }}
+                            </span>
+                        </td>
+                        <td>{{ tx.created_at.strftime('%Y-%m-%d %H:%M') if tx.created_at else '' }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan="8" style="text-align:center; padding:24px;">No transactions recorded.</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,96 @@
+{
+    "trained_at": "2026-09-26 05:24:44 UTC",
+    "total_samples": 7500,
+    "train_samples": 6000,
+    "test_samples": 1500,
+    "features": [
+        "amount",
+        "time",
+        "time_risk",
+        "transaction_frequency",
+        "avg_transaction_amount",
+        "amount_deviation",
+        "failed_attempts",
+        "beneficiary_frequency",
+        "transaction_type",
+        "is_new_beneficiary",
+        "device_changed",
+        "location_changed"
+    ],
+    "feature_count": 12,
+    "production_model": "Random Forest Classifier",
+    "comparison": {
+        "Random Forest": {
+            "accuracy": 87.13,
+            "precision": 57.14,
+            "recall": 55.36,
+            "f1_score": 56.24,
+            "roc_auc": 84.9,
+            "pr_auc": 56.94,
+            "confusion_matrix": [
+                [
+                    1183,
+                    93
+                ],
+                [
+                    100,
+                    124
+                ]
+            ]
+        },
+        "Gradient Boosting": {
+            "accuracy": 88.93,
+            "precision": 69.86,
+            "recall": 45.54,
+            "f1_score": 55.14,
+            "roc_auc": 87.24,
+            "pr_auc": 64.13,
+            "confusion_matrix": [
+                [
+                    1232,
+                    44
+                ],
+                [
+                    122,
+                    102
+                ]
+            ]
+        },
+        "Logistic Regression": {
+            "accuracy": 81.87,
+            "precision": 43.75,
+            "recall": 75.0,
+            "f1_score": 55.26,
+            "roc_auc": 86.09,
+            "pr_auc": 57.93,
+            "confusion_matrix": [
+                [
+                    1060,
+                    216
+                ],
+                [
+                    56,
+                    168
+                ]
+            ]
+        },
+        "Decision Tree": {
+            "accuracy": 78.4,
+            "precision": 37.05,
+            "recall": 63.84,
+            "f1_score": 46.89,
+            "roc_auc": 76.22,
+            "pr_auc": 50.68,
+            "confusion_matrix": [
+                [
+                    1033,
+                    243
+                ],
+                [
+                    81,
+                    143
+                ]
+            ]
+        }
+    }
+}

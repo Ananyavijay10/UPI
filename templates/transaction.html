@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Transaction #{{ tx.id }} Details | UPI Fraud Detection{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <div class="page-title">
+        <h1>TRANSACTION INSPECTION</h1>
+        <p>Detailed behavioral telemetry audit for Record #{{ tx.id }}</p>
+    </div>
+    <div class="top-bar-actions">
+        <a href="{{ url_for('history') }}" class="nav-btn nav-btn-secondary">
+            &larr; Back to History
+        </a>
+    </div>
+</div>
+
+<div class="content-grid-2col">
+    <!-- LEFT: Transaction Parameters & Telemetry -->
+    <div class="glass-card" style="padding:24px;">
+        <h3 style="font-size:1.2rem; margin-bottom:18px;">Telemetry Parameters</h3>
+        
+        <div style="display:flex; flex-direction:column; gap:12px; font-size:0.88rem;">
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-glass);">
+                <span style="color:var(--text-muted);">Transaction Amount</span>
+                <strong style="font-size:1.1rem; color:#ffffff;">₹{{ "{:,.2f}".format(tx.amount) }}</strong>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-glass);">
+                <span style="color:var(--text-muted);">Hour of Day</span>
+                <strong>{{ "{:02d}:00".format(tx.time) }}</strong>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-glass);">
+                <span style="color:var(--text-muted);">Category / Purpose</span>
+                <strong>{{ tx.transaction_type }}</strong>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-glass);">
+                <span style="color:var(--text-muted);">User Personal Average</span>
+                <strong>₹{{ "{:,.2f}".format(tx.avg_transaction_amount) }}</strong>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-glass);">
+                <span style="color:var(--text-muted);">Velocity in Last 24 Hours</span>
+                <strong>{{ tx.transaction_frequency }} Transactions</strong>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-glass);">
+                <span style="color:var(--text-muted);">Recipient Beneficiary Frequency</span>
+                <strong>{{ tx.beneficiary_frequency }} Past Transfers</strong>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-glass);">
+                <span style="color:var(--text-muted);">New Beneficiary Flag</span>
+                <span class="status-pill {% if tx.is_new_beneficiary %}suspicious{% else %}safe{% endif %}">
+                    {{ 'YES' if tx.is_new_beneficiary else 'NO' }}
+                </span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-glass);">
+                <span style="color:var(--text-muted);">Device Changed</span>
+                <span class="status-pill {% if tx.device_changed %}fraud{% else %}safe{% endif %}">
+                    {{ 'YES' if tx.device_changed else 'NO' }}
+                </span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-glass);">
+                <span style="color:var(--text-muted);">Location Changed</span>
+                <span class="status-pill {% if tx.location_changed %}fraud{% else %}safe{% endif %}">
+                    {{ 'YES' if tx.location_changed else 'NO' }}
+                </span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; padding:10px 0;">
+                <span style="color:var(--text-muted);">Failed PIN Attempts</span>
+                <strong>{{ tx.failed_attempts }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Risk Evaluation, Indicators & Resolution -->
+    <div style="display:flex; flex-direction:column; gap:20px;">
+        <div class="glass-card" style="padding:24px;">
+            <h3 style="font-size:1.2rem; margin-bottom:16px;">AI Risk Evaluation</h3>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+                <div>
+                    <span style="font-size:0.75rem; color:var(--text-muted); display:block;">CLASSIFICATION</span>
+                    {% if pred.status == 'FRAUD LIKELY' %}
+                        <span class="status-pill fraud" style="font-size:0.9rem; padding:4px 12px;">FRAUD LIKELY</span>
+                    {% elif pred.status == 'SUSPICIOUS' %}
+                        <span class="status-pill suspicious" style="font-size:0.9rem; padding:4px 12px;">SUSPICIOUS</span>
+                    {% else %}
+                        <span class="status-pill safe" style="font-size:0.9rem; padding:4px 12px;">SAFE</span>
+                    {% endif %}
+                </div>
+
+                <div style="text-align:right;">
+                    <span style="font-size:0.75rem; color:var(--text-muted); display:block;">RISK SCORE</span>
+                    <strong style="font-size:1.5rem; color:#ffffff;">{{ pred.risk_score }} / 100</strong>
+                    <span class="status-pill {% if pred.risk_level in ['HIGH','CRITICAL'] %}fraud{% elif pred.risk_level=='MEDIUM' %}suspicious{% else %}safe{% endif %}">
+                        {{ pred.risk_level }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Explainable Indicators -->
+            <div style="background:rgba(11, 19, 36, 0.6); border:1px solid var(--border-glass); border-radius:var(--radius-md); padding:16px; margin-bottom:18px;">
+                <strong style="font-size:0.86rem; color:#ffffff; display:block; margin-bottom:8px;">Detected Risk Indicators</strong>
+                <ul style="list-style:none; padding:0; margin:0; font-size:0.82rem;">
+                    {% if indicators %}
+                        {% for ind in indicators %}
+                        <li style="color:#fde68a; display:flex; align-items:flex-start; gap:8px; margin-bottom:6px;">
+                            <span style="color:#f59e0b;">⚠</span>
+                            <span>{{ ind }}</span>
+                        </li>
+                        {% endfor %}
+                    {% else %}
+                        <li style="color:#10b981; display:flex; align-items:center; gap:8px;">
+                            <span>✓</span>
+                            <span>No major rule-based risk indicators detected</span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <!-- Current Resolution Status -->
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:rgba(255,255,255,0.03); border-radius:var(--radius-sm);">
+                <span style="font-size:0.8rem; color:var(--text-muted);">Resolution Status:</span>
+                <strong style="font-size:0.85rem; color:var(--accent-cyan);">{{ pred.action_status }}</strong>
+            </div>
+        </div>
+
+        <!-- Verification Action Card -->
+        <div class="glass-card" style="padding:24px;">
+            <h4 style="font-size:1rem; margin-bottom:6px;">Transaction Verification Actions</h4>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">
+                Simulate consumer or bank operations center authorization for this transaction.
+            </p>
+
+            <div style="display:flex; gap:12px;">
+                <button type="button" id="btn-detail-verify" class="nav-btn nav-btn-primary" style="flex:1; justify-content:center; background:var(--risk-safe); box-shadow:none;">
+                    ✓ Verify &amp; Clear
+                </button>
+                <button type="button" id="btn-detail-cancel" class="nav-btn nav-btn-secondary" style="flex:1; justify-content:center; border-color:var(--risk-danger); color:var(--risk-danger);">
+                    ✕ Cancel &amp; Flag
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const txId = {{ tx.id }};
+    const btnV = document.getElementById('btn-detail-verify');
+    const btnC = document.getElementById('btn-detail-cancel');
+
+    if (btnV) {
+        btnV.addEventListener('click', async () => {
+            try {
+                const res = await fetch(`/api/transaction/${txId}/verify`, { method: 'POST' });
+                const d = await res.json();
+                if (d.success) {
+                    showToast('Transaction verified and cleared successfully!', 'success');
+                    setTimeout(() => window.location.reload(), 1000);
+                }
+            } catch (e) { showToast('Action failed', 'danger'); }
+        });
+    }
+
+    if (btnC) {
+        btnC.addEventListener('click', async () => {
+            try {
+                const res = await fetch(`/api/transaction/${txId}/cancel`, { method: 'POST' });
+                const d = await res.json();
+                if (d.success) {
+                    showToast('Transaction cancelled.', 'warning');
+                    setTimeout(() => window.location.reload(), 1000);
+                }
+            } catch (e) { showToast('Action failed', 'danger'); }
+        });
+    }
+});
+</script>
+{% endblock %}

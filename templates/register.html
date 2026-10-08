@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Account | UPI Fraud Detection</title>
+    <!-- Fonts & CSS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body>
+    <div class="bg-ambient-layer">
+        <div class="ambient-sphere sphere-1"></div>
+        <div class="ambient-sphere sphere-2"></div>
+        <div class="grid-overlay"></div>
+    </div>
+
+    <!-- Header link back -->
+    <header class="public-nav">
+        <a href="{{ url_for('index') }}" class="brand-link">
+            <div class="brand-shield-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="M9 12l2 2 4-4"/>
+                </svg>
+            </div>
+            <div class="brand-title-text">UPI <span>Shield</span></div>
+        </a>
+        <a href="{{ url_for('index') }}" class="nav-btn nav-btn-secondary">&larr; Back to Home</a>
+    </header>
+
+    <div class="auth-page-container">
+        <div class="glass-card auth-card">
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="flash-messages-container">
+                    {% for category, message in messages %}
+                    <div class="flash-alert {{ category }}">
+                        <span>{{ message }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% endwith %}
+
+            <div class="auth-header">
+                <h2>Create Account</h2>
+                <p>Register as a risk analyst or user</p>
+            </div>
+
+            <form action="{{ url_for('register') }}" method="POST" class="auth-form">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input 
+                        type="text" 
+                        id="name" 
+                        name="name" 
+                        value="{{ name or '' }}" 
+                        placeholder="e.g. Priya Patel" 
+                        autocomplete="name"
+                        required 
+                        autofocus
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        value="{{ email or '' }}" 
+                        placeholder="e.g. priya@upi.bank" 
+                        autocomplete="username"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password (min 6 characters)</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="••••••••" 
+                        autocomplete="new-password"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password">Confirm Password</label>
+                    <input 
+                        type="password" 
+                        id="password_confirm" 
+                        name="confirm_password" 
+                        placeholder="••••••••" 
+                        autocomplete="new-password"
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="auth-submit-btn">Register Account</button>
+            </form>
+
+            <div class="auth-footer">
+                Already registered? <a href="{{ url_for('login') }}">Sign In</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

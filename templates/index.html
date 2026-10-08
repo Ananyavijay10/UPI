@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-Powered UPI Fraud Detection and Risk Analysis Web Application">
+    <title>UPI Fraud Detection | AI-Powered Risk Intelligence</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body>
+    <!-- Atmospheric Background Ambient Glows -->
+    <div class="bg-ambient-layer">
+        <div class="ambient-sphere sphere-1"></div>
+        <div class="ambient-sphere sphere-2"></div>
+        <div class="grid-overlay"></div>
+    </div>
+
+    <!-- Navigation Header -->
+    <header class="public-nav">
+        <a href="{{ url_for('index') }}" class="brand-link">
+            <div class="brand-shield-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="M9 12l2 2 4-4"/>
+                </svg>
+            </div>
+            <div class="brand-title-text">
+                UPI <span>Shield</span>
+            </div>
+        </a>
+
+        <nav class="nav-links">
+            <a href="#how-it-works" class="nav-link-item">How It Works</a>
+            <a href="#features" class="nav-link-item">Features</a>
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('dashboard') }}" class="nav-btn nav-btn-primary">Dashboard</a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="nav-link-item">Sign In</a>
+                <a href="{{ url_for('register') }}" class="nav-btn nav-btn-primary">Get Started</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero-section">
+        <div class="hero-pill">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981; box-shadow:0 0 8px #10b981;"></span>
+            <span>NEXT-GEN AI RISK ENGINE • SCATTER &amp; ENSEMBLE SCORING</span>
+        </div>
+
+        <h1 class="hero-title">
+            UPI FRAUD DETECTION<br>
+            <span class="gradient-text">Detect suspicious transactions using machine learning.</span>
+        </h1>
+
+        <p class="hero-description">
+            A production-grade machine learning platform analyzing real-time UPI transaction telemetry,
+            behavioral anomalies, velocity spikes, and temporal vulnerabilities to safeguard digital payments.
+        </p>
+
+        <div class="hero-cta-group">
+            <a href="{{ url_for('analyze') }}" class="nav-btn nav-btn-primary cta-btn-large">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span>ANALYZE TRANSACTION</span>
+            </a>
+            <a href="{{ url_for('dashboard') }}" class="nav-btn nav-btn-secondary cta-btn-large">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                <span>VIEW DASHBOARD</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS SECTION -->
+    <section class="landing-grid" id="how-it-works">
+        <div class="section-head">
+            <span class="section-eyebrow">SYSTEM ARCHITECTURE</span>
+            <h2 class="section-main-title">How It Works</h2>
+        </div>
+
+        <div class="features-cards-grid">
+            <div class="glass-card feature-box">
+                <div class="feature-icon-wrapper" style="font-family:var(--font-heading); font-size:1.3rem; font-weight:800;">
+                    01
+                </div>
+                <h3>Transaction Data</h3>
+                <p>Captures 11 telemetry parameters: Amount (₹), Time-risk, Transaction Category, Frequency velocity, Baseline deviation, Beneficiary history, Device, and Location alterations.</p>
+            </div>
+
+            <div class="glass-card feature-box">
+                <div class="feature-icon-wrapper" style="font-family:var(--font-heading); font-size:1.3rem; font-weight:800;">
+                    02
+                </div>
+                <h3>ML Risk Analysis</h3>
+                <p>Feeds normalized features through a multi-model Scikit-Learn ColumnTransformer pipeline (StandardScaler + OneHotEncoder) powered by a 100-tree Random Forest ensemble.</p>
+            </div>
+
+            <div class="glass-card feature-box">
+                <div class="feature-icon-wrapper" style="font-family:var(--font-heading); font-size:1.3rem; font-weight:800;">
+                    03
+                </div>
+                <h3>Fraud Detection</h3>
+                <p>Calculates exact risk scores (0–100), maps decision tiers (Safe, Suspicious, Fraud Likely), and generates human-interpretable Explainable AI risk indicators.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CORE FEATURES SECTION -->
+    <section class="landing-grid" id="features">
+        <div class="section-head">
+            <span class="section-eyebrow">DEFENSIVE CAPABILITIES</span>
+            <h2 class="section-main-title">Core Platform Features</h2>
+        </div>
+
+        <div class="features-cards-grid">
+            <div class="glass-card feature-box">
+                <div class="feature-icon-wrapper">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                </div>
+                <h3>Machine Learning</h3>
+                <p>Compares Random Forest, Gradient Boosting, Logistic Regression, and Decision Tree with benchmark metrics: Accuracy, Precision, Recall, F1, and ROC-AUC.</p>
+            </div>
+
+            <div class="glass-card feature-box">
+                <div class="feature-icon-wrapper">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </div>
+                <h3>Risk Scoring</h3>
+                <p>Granular risk severity classification spanning LOW (0–30), MEDIUM (31–60), HIGH (61–80), and CRITICAL (81–100) with dynamic radial visual gauge.</p>
+            </div>
+
+            <div class="glass-card feature-box">
+                <div class="feature-icon-wrapper">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                </div>
+                <h3>Explainable Indicators</h3>
+                <p>Clear separation between probabilistic model scores and deterministic rule-based triggers, explaining why anomalies were highlighted.</p>
+            </div>
+
+            <div class="glass-card feature-box">
+                <div class="feature-icon-wrapper">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                </div>
+                <h3>Transaction Analytics</h3>
+                <p>Interactive Chart.js visual dashboard illustrating volume trends by hour, risk distributions, and categorical breakdowns directly from SQLite.</p>
+            </div>
+
+            <div class="glass-card feature-box">
+                <div class="feature-icon-wrapper">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <h3>Fraud Alerts &amp; Verification</h3>
+                <p>Simulated two-tier authentication alerts allowing users to verify cleared transactions or halt high-risk anomalies.</p>
+            </div>
+
+            <div class="glass-card feature-box">
+                <div class="feature-icon-wrapper">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                </div>
+                <h3>Admin Control Center</h3>
+                <p>Privileged management console for monitoring system-wide transactions, tracking real-time fraud rates, and triggering on-demand pipeline retraining.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER BANNER -->
+    <div class="disclaimer-banner">
+        <p><strong>UPI Shield Risk Engine:</strong> Machine learning fraud detection &amp; real-time telemetry monitoring platform.</p>
+        <p style="margin-top:4px;">Built with Python, Flask, SQLite, and Scikit-Learn</p>
+    </div>
+</body>
+</html>
