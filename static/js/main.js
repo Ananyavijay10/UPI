@@ -15,15 +15,28 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sidebarBackdrop) sidebarBackdrop.classList.add('hidden');
     };
 
+    const mobileCloseBtn = document.getElementById('sidebar-close-btn');
+
     if (mobileMenuBtn && sidebar) {
         mobileMenuBtn.addEventListener('click', () => {
             sidebar.classList.toggle('open');
             if (sidebarBackdrop) sidebarBackdrop.classList.toggle('hidden');
         });
 
+        if (mobileCloseBtn) {
+            mobileCloseBtn.addEventListener('click', closeSidebar);
+        }
+
         if (sidebarBackdrop) {
             sidebarBackdrop.addEventListener('click', closeSidebar);
         }
+
+        // Close sidebar if a nav link is clicked on mobile
+        sidebar.querySelectorAll('.sidebar-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth < 1024) closeSidebar();
+            });
+        });
 
         // Close sidebar if viewport grows to desktop width
         window.addEventListener('resize', () => {

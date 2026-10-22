@@ -98,6 +98,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (statusFilter) statusFilter.addEventListener('change', () => loadHistory(1));
     if (typeFilter) typeFilter.addEventListener('change', () => loadHistory(1));
 
+    const resetFiltersBtn = document.getElementById('btn-reset-filters');
+    if (resetFiltersBtn) {
+        resetFiltersBtn.addEventListener('click', () => {
+            if (searchInput) searchInput.value = '';
+            if (statusFilter) statusFilter.value = '';
+            if (typeFilter) typeFilter.value = '';
+            loadHistory(1);
+        });
+    }
+
     if (prevBtn) {
         prevBtn.addEventListener('click', () => {
             if (currentPage > 1) loadHistory(currentPage - 1);

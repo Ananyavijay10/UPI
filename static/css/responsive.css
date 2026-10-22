@@ -78,6 +78,7 @@ label, .form-label         { font-size: var(--fs-body); }
         transform: translateX(0);
         box-shadow: 0 0 60px rgba(0, 0, 0, 0.85);
     }
+    .sidebar-close-btn { display: flex !important; }
 
     .app-main { margin-left: 0; padding: 0 20px 90px; }
 
@@ -311,6 +312,7 @@ label, .form-label         { font-size: var(--fs-body); }
 @media (min-width: 1024px) {
     .mobile-header-bar { display: none !important; }
     .mobile-bottom-nav { display: none !important; }
+    .sidebar-close-btn { display: none !important; }
 
     .app-sidebar { transform: translateX(0) !important; width: 260px; }
     .app-main    { margin-left: 260px; padding: 30px 36px 60px; }

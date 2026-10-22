@@ -100,7 +100,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (timeInput && timeInput.value !== '') {
         syncTime(timeInput.value);
     } else {
-        syncTime('');
+        syncTime(new Date().getHours());
+    }
+
+    // Reset Form Action
+    const resetBtn = document.getElementById('analyze-reset-btn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            if (form) form.reset();
+            syncTime(new Date().getHours());
+            checkMidnightAlert();
+            if (emptyState) emptyState.classList.remove('hidden');
+            if (resultCard) resultCard.classList.add('hidden');
+            if (verificationBox) verificationBox.classList.add('hidden');
+            currentTransactionId = null;
+            showToast('Form cleared and reset.', 'info');
+        });
     }
 
     // 2. Real-Time Check for Midnight High-Value Alert (12 AM - 6 AM & Amount > ₹200,000)

@@ -139,13 +139,23 @@
                 Simulate consumer or bank operations center authorization for this transaction.
             </p>
 
-            <div style="display:flex; gap:12px;">
-                <button type="button" id="btn-detail-verify" class="nav-btn nav-btn-primary" style="flex:1; justify-content:center; background:var(--risk-safe); box-shadow:none;">
-                    ✓ Verify &amp; Clear
-                </button>
-                <button type="button" id="btn-detail-cancel" class="nav-btn nav-btn-secondary" style="flex:1; justify-content:center; border-color:var(--risk-danger); color:var(--risk-danger);">
-                    ✕ Cancel &amp; Flag
-                </button>
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                {% if pred.action_status == 'VERIFIED' %}
+                    <button type="button" class="nav-btn" style="flex:1; justify-content:center; background:rgba(16, 185, 129, 0.2); border:1px solid var(--risk-safe-border); color:var(--risk-safe); cursor:default;" disabled>
+                        ✓ Verified &amp; Cleared
+                    </button>
+                {% elif pred.action_status == 'CANCELLED' %}
+                    <button type="button" class="nav-btn" style="flex:1; justify-content:center; background:rgba(239, 68, 68, 0.2); border:1px solid var(--risk-danger-border); color:var(--risk-danger); cursor:default;" disabled>
+                        ✕ Cancelled &amp; Flagged
+                    </button>
+                {% else %}
+                    <button type="button" id="btn-detail-verify" class="nav-btn nav-btn-primary" style="flex:1; justify-content:center; background:var(--risk-safe); box-shadow:none;">
+                        ✓ Verify &amp; Clear
+                    </button>
+                    <button type="button" id="btn-detail-cancel" class="nav-btn nav-btn-secondary" style="flex:1; justify-content:center; border-color:var(--risk-danger); color:var(--risk-danger);">
+                        ✕ Cancel &amp; Flag
+                    </button>
+                {% endif %}
             </div>
         </div>
     </div>
