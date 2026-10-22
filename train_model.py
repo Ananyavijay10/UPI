@@ -138,14 +138,21 @@ def train_and_compare_models(csv_path: str = Config.DATASET_PATH, save_productio
         'comparison': results
     }
 
-    with open(Config.METRICS_JSON_PATH, 'w') as f:
-        json.dump(metadata, f, indent=4)
-    print(f"[+] Model comparison metrics saved to: {Config.METRICS_JSON_PATH}")
+    # Save metadata JSON safely
+    try:
+        with open(Config.METRICS_JSON_PATH, 'w') as f:
+            json.dump(metadata, f, indent=4)
+        print(f"[+] Model comparison metrics saved to: {Config.METRICS_JSON_PATH}")
+    except (OSError, PermissionError) as e:
+        print(f"[!] Notice: Cannot write metrics to read-only filesystem: {e}")
 
-    # Persist Production Pipeline
+    # Persist Production Pipeline safely
     if save_production and production_model is not None:
-        joblib.dump(production_model, Config.MODEL_PATH)
-        print(f"[+] Production Random Forest model saved to: {Config.MODEL_PATH}")
+        try:
+            joblib.dump(production_model, Config.MODEL_PATH)
+            print(f"[+] Production Random Forest model saved to: {Config.MODEL_PATH}")
+        except (OSError, PermissionError) as e:
+            print(f"[!] Notice: Cannot save model to read-only filesystem: {e}")
 
     return production_model, metadata
 

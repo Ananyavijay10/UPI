@@ -81,82 +81,104 @@ def admin_required(f):
 def bootstrap_database_and_models():
     """
     Initializes database schema, seeds default accounts and sample transactions,
-    and loads the trained Random Forest model.
+    and loads the trained Random Forest model safely.
     """
     global active_model
-    with app.app_context():
-        db.create_all()
+    try:
+        with app.app_context():
+            db.create_all()
 
-        # Migrate SQLite columns if not present
-        try:
-            with db.engine.connect() as conn:
-                cols = [row[1] for row in conn.execute(db.text("PRAGMA table_info(transactions)"))]
-                if 'high_tx_reason' not in cols:
-                    conn.execute(db.text("ALTER TABLE transactions ADD COLUMN high_tx_reason TEXT"))
-                if 'upi_id' not in cols:
-                    conn.execute(db.text("ALTER TABLE transactions ADD COLUMN upi_id TEXT"))
-                if 'payment_mode' not in cols:
-                    conn.execute(db.text("ALTER TABLE transactions ADD COLUMN payment_mode TEXT"))
-                conn.commit()
-        except Exception as e:
-            logging.warning("SQLite column migration notice: %s", str(e))
-
-        # Seed Default Admin Account
-        admin = User.query.filter_by(email='admin@upi.bank').first()
-        if not admin:
-            admin = User(name='Security Administrator', email='admin@upi.bank', role='ADMIN')
-            admin.set_password('Admin@123')
-            db.session.add(admin)
-            logging.info("Default Admin account seeded: admin@upi.bank / Admin@123")
-
-        # Seed Default User Account
-        demo_user = User.query.filter_by(email='user@upi.bank').first()
-        if not demo_user:
-            demo_user = User(name='Rohan Sharma', email='user@upi.bank', role='USER')
-            demo_user.set_password('User@123')
-            db.session.add(demo_user)
-            logging.info("Default User account seeded: user@upi.bank / User@123")
-
-        db.session.commit()
-
-        # Ensure Model File Exists
-        if not os.path.exists(Config.MODEL_PATH):
-            logging.info("Model file not found. Triggering initial training...")
+            # Migrate SQLite columns if not present
             try:
-                active_model, _ = train_and_compare_models(Config.DATASET_PATH, save_production=True)
+                with db.engine.connect() as conn:
+                    cols = [row[1] for row in conn.execute(db.text("PRAGMA table_info(transactions)"))]
+                    if 'high_tx_reason' not in cols:
+                        conn.execute(db.text("ALTER TABLE transactions ADD COLUMN high_tx_reason TEXT"))
+                    if 'upi_id' not in cols:
+                        conn.execute(db.text("ALTER TABLE transactions ADD COLUMN upi_id TEXT"))
+                    if 'payment_mode' not in cols:
+                        conn.execute(db.text("ALTER TABLE transactions ADD COLUMN payment_mode TEXT"))
+                    conn.commit()
             except Exception as e:
-                logging.error("Failed to train model at startup: %s", str(e), exc_info=True)
-        else:
-            try:
-                active_model = load_model(Config.MODEL_PATH)
-                logging.info("Loaded pre-trained model from: %s", Config.MODEL_PATH)
-            except Exception as e:
-                logging.error("Failed to load model: %s", str(e))
+                logging.warning("Database schema check notice: %s", str(e))
 
-        # Seed Sample Historical Transactions if database is empty
-        if Transaction.query.count() == 0 and demo_user:
-            seed_sample_transactions(demo_user.id)
-
-        # Seed ModelMetrics table from model_metrics.json if empty
-        if ModelMetrics.query.count() == 0 and os.path.exists(Config.METRICS_JSON_PATH):
+            # Seed Default Admin Account
             try:
-                with open(Config.METRICS_JSON_PATH, 'r') as f:
-                    data = json.load(f)
-                    for m_name, m_vals in data.get('comparison', {}).items():
-                        metric_row = ModelMetrics(
-                            model_name=m_name,
-                            accuracy=m_vals.get('accuracy', 0),
-                            precision=m_vals.get('precision', 0),
-                            recall=m_vals.get('recall', 0),
-                            f1_score=m_vals.get('f1_score', 0),
-                            roc_auc=m_vals.get('roc_auc', 0),
-                            pr_auc=m_vals.get('pr_auc')
-                        )
-                        db.session.add(metric_row)
-                db.session.commit()
-                logging.info("Model metrics seeded into SQLite database.")
+                admin = User.query.filter_by(email='admin@upi.bank').first()
+                if not admin:
+                    admin = User(name='Security Administrator', email='admin@upi.bank', role='ADMIN')
+                    admin.set_password('Admin@123')
+                    db.session.add(admin)
+                    db.session.commit()
+                    logging.info("Default Admin account seeded: admin@upi.bank / Admin@123")
             except Exception as e:
-                logging.warning("Failed to seed model metrics: %s", str(e))
+                db.session.rollback()
+                logging.warning("Admin seeding notice: %s", str(e))
+
+            # Seed Default User Account
+            demo_user = None
+            try:
+                demo_user = User.query.filter_by(email='user@upi.bank').first()
+                if not demo_user:
+                    demo_user = User(name='Rohan Sharma', email='user@upi.bank', role='USER')
+                    demo_user.set_password('User@123')
+                    db.session.add(demo_user)
+                    db.session.commit()
+                    logging.info("Default User account seeded: user@upi.bank / User@123")
+            except Exception as e:
+                db.session.rollback()
+                logging.warning("User seeding notice: %s", str(e))
+
+            # Ensure Model File Exists & Load safely
+            if os.path.exists(Config.MODEL_PATH):
+                try:
+                    active_model = load_model(Config.MODEL_PATH)
+                    logging.info("Loaded pre-trained model from: %s", Config.MODEL_PATH)
+                except Exception as e:
+                    logging.warning("Could not unpickle model (%s); will use resilient heuristic engine.", str(e))
+            elif not getattr(Config, 'IS_SERVERLESS', False):
+                # Only attempt local training if not running in read-only serverless
+                logging.info("Model file not found. Triggering initial training...")
+                try:
+                    active_model, _ = train_and_compare_models(Config.DATASET_PATH, save_production=True)
+                except Exception as e:
+                    logging.error("Failed to train model at startup: %s", str(e))
+            else:
+                logging.warning("Running on serverless without pre-baked model; heuristic fallback active.")
+
+            # Seed Sample Historical Transactions if database is empty
+            try:
+                if demo_user and Transaction.query.count() == 0:
+                    seed_sample_transactions(demo_user.id)
+            except Exception as e:
+                db.session.rollback()
+                logging.warning("Sample transaction seeding notice: %s", str(e))
+
+            # Seed ModelMetrics table from model_metrics.json if empty
+            if os.path.exists(Config.METRICS_JSON_PATH):
+                try:
+                    if ModelMetrics.query.count() == 0:
+                        with open(Config.METRICS_JSON_PATH, 'r') as f:
+                            data = json.load(f)
+                            for m_name, m_vals in data.get('comparison', {}).items():
+                                metric_row = ModelMetrics(
+                                    model_name=m_name,
+                                    accuracy=m_vals.get('accuracy', 0),
+                                    precision=m_vals.get('precision', 0),
+                                    recall=m_vals.get('recall', 0),
+                                    f1_score=m_vals.get('f1_score', 0),
+                                    roc_auc=m_vals.get('roc_auc', 0),
+                                    pr_auc=m_vals.get('pr_auc')
+                                )
+                                db.session.add(metric_row)
+                        db.session.commit()
+                        logging.info("Model metrics seeded into database.")
+                except Exception as e:
+                    db.session.rollback()
+                    logging.warning("Model metrics seeding notice: %s", str(e))
+
+    except Exception as e:
+        logging.error("Database bootstrap error: %s", str(e), exc_info=True)
 
 
 def seed_sample_transactions(user_id: int):
@@ -803,8 +825,25 @@ def error_500(e):
     return "<h3>Internal Server Error</h3><p>An unexpected server error occurred.</p>", 500
 
 
+# Lazy bootstrap initialization for serverless cold-starts
+_db_initialized = False
+
+@app.before_request
+def ensure_db_initialized():
+    global _db_initialized
+    if not _db_initialized:
+        try:
+            bootstrap_database_and_models()
+        except Exception as e:
+            logging.error("Lazy bootstrap notice: %s", str(e))
+        finally:
+            _db_initialized = True
+
 # Bootstrap Application Context on Startup
-bootstrap_database_and_models()
+try:
+    bootstrap_database_and_models()
+except Exception as e:
+    logging.error("Startup bootstrap notice: %s", str(e))
 
 
 if __name__ == '__main__':
