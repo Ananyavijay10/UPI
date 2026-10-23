@@ -47,21 +47,43 @@ app.config.from_object(Config)
 class VercelPathFixer:
     """
     WSGI middleware that restores Flask's PATH_INFO when deployed behind Vercel rewrites.
-    When Vercel rewrites incoming traffic from `/(.*)` to `/api/index`,
-    Vercel sets PATH_INFO to '/api/index'.
-    This middleware retrieves the actual client requested path from Vercel's
-    request headers (x-forwarded-uri, x-invoke-path, x-matched-path, request_uri)
-    and restores PATH_INFO. If the path is '/api/index' or '/api', it falls
-    back to '/' (the landing page).
+    1. Reads the `path` query parameter passed by `vercel.json` rewrites (e.g. `?path=/$1`).
+    2. Falls back to Vercel proxy headers (x-forwarded-uri, x-invoke-path, request_uri).
+    3. Normalizes PATH_INFO so Flask routes all pages, static files, and APIs correctly.
     """
     def __init__(self, wsgi_app):
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
+        from urllib.parse import parse_qs, urlencode
+
+        # 1. Check path parameter from vercel.json rewrite
+        query_string = environ.get('QUERY_STRING', '')
+        if query_string:
+            params = parse_qs(query_string, keep_blank_values=True)
+            if 'path' in params and params['path']:
+                target = params['path'][0]
+                if not target.startswith('/'):
+                    target = '/' + target
+                while target.startswith('//'):
+                    target = target[1:]
+
+                environ['PATH_INFO'] = target
+
+                # Clean query string so 'path' doesn't contaminate request.args
+                del params['path']
+                pairs = []
+                for k, vals in params.items():
+                    for v in vals:
+                        pairs.append((k, v))
+                environ['QUERY_STRING'] = urlencode(pairs)
+
+                return self.wsgi_app(environ, start_response)
+
+        # 2. Check proxy headers
         raw_path = (
             environ.get('HTTP_X_FORWARDED_URI')
             or environ.get('HTTP_X_INVOKE_PATH')
-            or environ.get('HTTP_X_MATCHED_PATH')
             or environ.get('REQUEST_URI')
         )
         current_path = environ.get('PATH_INFO', '')
