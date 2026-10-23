@@ -33,8 +33,51 @@ logging.basicConfig(
     format='[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
 )
 
-app = Flask(__name__)
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, 'templates'),
+    static_folder=os.path.join(BASE_DIR, 'static'),
+    static_url_path='/static'
+)
 app.config.from_object(Config)
+
+# WSGI Middleware to fix PATH_INFO on Vercel serverless deployment
+class VercelPathFixer:
+    """
+    WSGI middleware that restores Flask's PATH_INFO when deployed behind Vercel rewrites.
+    When Vercel rewrites incoming traffic from `/(.*)` to `/api/index`,
+    Vercel sets PATH_INFO to '/api/index'.
+    This middleware retrieves the actual client requested path from Vercel's
+    request headers (x-forwarded-uri, x-invoke-path, x-matched-path, request_uri)
+    and restores PATH_INFO. If the path is '/api/index' or '/api', it falls
+    back to '/' (the landing page).
+    """
+    def __init__(self, wsgi_app):
+        self.wsgi_app = wsgi_app
+
+    def __call__(self, environ, start_response):
+        raw_path = (
+            environ.get('HTTP_X_FORWARDED_URI')
+            or environ.get('HTTP_X_INVOKE_PATH')
+            or environ.get('HTTP_X_MATCHED_PATH')
+            or environ.get('REQUEST_URI')
+        )
+        current_path = environ.get('PATH_INFO', '')
+
+        if raw_path:
+            path_only = raw_path.split('?')[0]
+            if path_only and path_only not in ('/api/index', '/api/index.py', '/api', '/api/'):
+                environ['PATH_INFO'] = path_only
+            elif current_path in ('/api/index', '/api/index.py', '/api', '/api/'):
+                environ['PATH_INFO'] = '/'
+        elif current_path in ('/api/index', '/api/index.py', '/api', '/api/'):
+            environ['PATH_INFO'] = '/'
+
+        return self.wsgi_app(environ, start_response)
+
+app.wsgi_app = VercelPathFixer(app.wsgi_app)
 
 # Initialize Database
 db.init_app(app)
@@ -249,6 +292,8 @@ def seed_sample_transactions(user_id: int):
 # PUBLIC / MARKETING / LANDING ROUTES
 # ---------------------------------------------------------------------------
 @app.route('/')
+@app.route('/api/index')
+@app.route('/api')
 def index():
     """Landing Page showcasing overview, architecture steps, and entry points."""
     return render_template('index.html')
@@ -536,6 +581,7 @@ def retrain_model_endpoint():
 # REST API ENDPOINTS
 # ---------------------------------------------------------------------------
 @app.route('/predict', methods=['POST'])
+@app.route('/api/predict', methods=['POST'])
 def api_predict():
     """
     Direct prediction endpoint: validates payload, runs inference,
@@ -812,7 +858,7 @@ def api_cancel_transaction(tx_id):
 # ---------------------------------------------------------------------------
 @app.errorhandler(404)
 def error_404(e):
-    if request.path.startswith('/api/'):
+    if request.path.startswith('/api/') and request.path not in ('/api/index', '/api/index.py', '/api', '/api/'):
         return jsonify({'success': False, 'error': 'Endpoint not found.'}), 404
     return render_template('index.html'), 404
 
